@@ -27,7 +27,7 @@ namespace Projekt6
         private Point anchorPoint;
         private List<Ellipse> ellipses = new();
         private List<Line> helpingLines = new();
-        private Point[,] BezierPoints = new Point[50,1000];
+        private Point[,] BezierPoints = new Point[50, 1000];
 
         //  private List<Ellipse> BezierEllipses = new();
 
@@ -76,13 +76,13 @@ namespace Projekt6
 
             if (ellipses.Count > 1)
             {
-                DrawHelpLine();  
+                DrawHelpLine();
             }
 
-            if(helpingLines.Count % 2 == 0 && helpingLines.Count != 0)
+            if (helpingLines.Count % 2 == 0 && helpingLines.Count != 0)
             {
                 float t = 0F;
-                while(t <= 1)
+                while (t <= 1)
                 {
                     Ellipse newElipse = new()
                     {
@@ -107,10 +107,10 @@ namespace Projekt6
                         Y = helpingLines[helpingLines.Count - 1].Y2,
                     };
 
-                    float P20X = (float)(Binomial(2, 0) * Point00.X * Math.Pow(1-t, 2) + Binomial(2,1) * Point01.X * t * (1-t) + Binomial(2,2) * Point02.X * t * t);
+                    float P20X = (float)(Binomial(2, 0) * Point00.X * Math.Pow(1-t, 2) + Binomial(2, 1) * Point01.X * t * (1-t) + Binomial(2, 2) * Point02.X * t * t);
                     float P20Y = (float)(Binomial(2, 0) * Point00.Y * Math.Pow(1-t, 2) + Binomial(2, 1) * Point01.Y * t * (1-t) + Binomial(2, 2) * Point02.Y * t * t);
 
-                    Point P20 = new(P20X,P20Y);
+                    Point P20 = new(P20X, P20Y);
 
                     BezierPoints[helpingLines.Count - 2, (int)(t *1000)] = P20;
 
@@ -145,8 +145,6 @@ namespace Projekt6
 
             canvas.Children.Add(line);
         }
-
-
 
         private void DrawCircle(MouseButtonEventArgs e)
         {
@@ -193,6 +191,7 @@ namespace Projekt6
 
         }
         DependencyObject element;
+
         private void canvas_LeftDown(object sender, MouseButtonEventArgs e)
         {
             var canvas = sender as Canvas;
@@ -206,121 +205,169 @@ namespace Projekt6
 
         private void canvas_LeftUp(object sender, MouseButtonEventArgs e)
         {
-            if(element != null)
+            if (element != null )
             {
-                if(element is Ellipse)
+                if (element is Ellipse)
                 {
                     var tmp = element as Ellipse;
-                    bool found = false;
                     Point MoveAnchorPoint = e.MouseDevice.GetPosition(canvas);
 
+                    int startingLineIndex = helpingLines.FindIndex(l => l.X1 == Canvas.GetLeft(tmp) + 2);
 
-                    //Trace.WriteLine(Canvas.GetLeft(tmp));
-
-                    int i = helpingLines.FindIndex(l => l.X1 == Canvas.GetLeft(tmp) + 2);
-                    int j = -2;
-
-                    if(i == - 1)
+                    if (startingLineIndex >= 0)
                     {
-                        i = helpingLines.FindIndex(l => l.X2 == Canvas.GetLeft(tmp) + 2);
-                        found = true;
-                    }
-                    else
-                    {
-                        j = helpingLines.FindIndex(l => l.X2 == Canvas.GetLeft(tmp) + 2);
-                    }
-                   
+                        Line startingLine = helpingLines[startingLineIndex];
 
-                    Canvas.SetTop(tmp, MoveAnchorPoint.Y);
-                    Canvas.SetLeft(tmp, MoveAnchorPoint.X);
-
-                    if(i != -1)
-                    {
-                        if (found)
+                        if (startingLineIndex - 1 >= 0)
                         {
-                            helpingLines[i].X2 = Canvas.GetLeft(tmp) + 2;
-                            helpingLines[i].Y2 = Canvas.GetTop(tmp) + 2;
+                            int beforeIndex = startingLineIndex - 1;
+
+                            if (beforeIndex >= 0)
+                            {
+                                Canvas.SetTop(tmp, MoveAnchorPoint.Y);
+                                Canvas.SetLeft(tmp, MoveAnchorPoint.X);
+
+                                if (startingLineIndex % 2 != 0)
+                                {
+                                    helpingLines[startingLineIndex].X1 = Canvas.GetLeft(tmp) + 2;
+                                    helpingLines[startingLineIndex].Y1 = Canvas.GetTop(tmp) + 2;
+
+                                    helpingLines[beforeIndex].X2 = Canvas.GetLeft(tmp) + 2;
+                                    helpingLines[beforeIndex].Y2 = Canvas.GetTop(tmp) + 2;
+
+                                    ReDrawBezier(startingLineIndex);
+                                }
+                                else
+                                {
+                                    int endLineIndex = helpingLines.FindIndex(l => l.X1 == startingLine.X2);
+
+                                    if (endLineIndex > 0)
+                                    {
+                                        Line endLine = helpingLines[endLineIndex];
+
+                                        Canvas.SetTop(tmp, MoveAnchorPoint.Y);
+                                        Canvas.SetLeft(tmp, MoveAnchorPoint.X);
+
+                                        helpingLines[startingLineIndex].X1 = Canvas.GetLeft(tmp) + 2;
+                                        helpingLines[startingLineIndex].Y1 = Canvas.GetTop(tmp) + 2;
+
+                                        ReDrawBezier(endLineIndex);
+                                    }
+
+                                    int endLineIndex2 = endLineIndex - 2;
+                                    int startingLineIndex2 = startingLineIndex - 2;
+
+                                    if (endLineIndex2 > 0)
+                                    {
+                                        Line endLine = helpingLines[endLineIndex2];
+
+                                        Canvas.SetTop(tmp, MoveAnchorPoint.Y);
+                                        Canvas.SetLeft(tmp, MoveAnchorPoint.X);
+
+                                        helpingLines[endLineIndex2].X2 = Canvas.GetLeft(tmp) + 2;
+                                        helpingLines[endLineIndex2].Y2 = Canvas.GetTop(tmp) + 2;
+
+                                        ReDrawBezier(endLineIndex2);
+                                    }
+                                }
+                            }
                         }
                         else
                         {
-                            helpingLines[i].X1 = Canvas.GetLeft(tmp) + 2;
-                            helpingLines[i].Y1 = Canvas.GetTop(tmp) + 2;
-
-                            if(j != -1)
+                            if (helpingLines[startingLineIndex + 1] != null)
                             {
-                                helpingLines[j].X2 = Canvas.GetLeft(tmp) + 2;
-                                helpingLines[j].Y2 = Canvas.GetTop(tmp) + 2;
+                                int endLineIndex = helpingLines.FindIndex(l => l.X1 == startingLine.X2);
+
+                                if (endLineIndex > 0)
+                                {
+                                    Line endLine = helpingLines[endLineIndex];
+
+                                    Canvas.SetTop(tmp, MoveAnchorPoint.Y);
+                                    Canvas.SetLeft(tmp, MoveAnchorPoint.X);
+
+                                    helpingLines[startingLineIndex].X1 = Canvas.GetLeft(tmp) + 2;
+                                    helpingLines[startingLineIndex].Y1 = Canvas.GetTop(tmp) + 2;
+
+                                    ReDrawBezier(endLineIndex);
+                                }
                             }
-                            
                         }
                     }
-
-                    if(i != -1)
+                    else
                     {
-                       // canvas.Children.Clear();
-                        ReDrawBezier(i);
+                        int endLineIndex = helpingLines.FindIndex(l => l.X2 == Canvas.GetLeft(tmp) + 2);
+
+                        if (endLineIndex > 0)
+                        {
+                            Line endLine = helpingLines[endLineIndex];
+                            startingLineIndex = helpingLines.FindIndex(l => l.X2 == endLine.X2);
+
+                            Canvas.SetTop(tmp, MoveAnchorPoint.Y);
+                            Canvas.SetLeft(tmp, MoveAnchorPoint.X);
+
+                            helpingLines[endLineIndex].X2 = Canvas.GetLeft(tmp) + 2;
+                            helpingLines[endLineIndex].Y2 = Canvas.GetTop(tmp) + 2;
+
+                            ReDrawBezier(endLineIndex);
+                        }
                     }
-                        
                 }
             }
         }
 
         private void ReDrawBezier(int index)
         {
-            for (int k = 0; k < 1000; k++)
+            if (index > 0)
             {
-                Ellipse ellipse = BezierEllipses[index - 1, k];
-                canvas.Children.Remove(ellipse);
-            }
-
-
-
-            float t = 0F;
-            while (t <= 1)
-            {
-                Ellipse newElipse = new()
+                for (int k = 0; k < 1000; k++)
                 {
-                    Stroke = Brushes.Black,
-                    StrokeThickness = 1,
-                    Fill = Brushes.Black
-                };
+                    Ellipse ellipse = BezierEllipses[index - 1, k];
+                    canvas.Children.Remove(ellipse);
+                }
 
-                Point Point00 = new()
+                float t = 0F;
+                while (t <= 1)
                 {
-                    X = helpingLines[index - 1].X1,
-                    Y = helpingLines[index - 1].Y1,
-                };
-                Point Point01 = new()
-                {
-                    X = helpingLines[index - 1].X2,
-                    Y = helpingLines[index - 1].Y2,
-                };
-                Point Point02 = new()
-                {
-                    X = helpingLines[index].X2,
-                    Y = helpingLines[index].Y2,
-                };
+                    Ellipse newElipse = new()
+                    {
+                        Stroke = Brushes.Black,
+                        StrokeThickness = 1,
+                        Fill = Brushes.Black
+                    };
 
-                float P20X = (float)(Binomial(2, 0) * Point00.X * Math.Pow(1-t, 2) + Binomial(2, 1) * Point01.X * t * (1-t) + Binomial(2, 2) * Point02.X * t * t);
-                float P20Y = (float)(Binomial(2, 0) * Point00.Y * Math.Pow(1-t, 2) + Binomial(2, 1) * Point01.Y * t * (1-t) + Binomial(2, 2) * Point02.Y * t * t);
+                    Point Point00 = new()
+                    {
+                        X = helpingLines[index - 1].X1,
+                        Y = helpingLines[index - 1].Y1,
+                    };
+                    Point Point01 = new()
+                    {
+                        X = helpingLines[index - 1].X2,
+                        Y = helpingLines[index - 1].Y2,
+                    };
+                    Point Point02 = new()
+                    {
+                        X = helpingLines[index].X2,
+                        Y = helpingLines[index].Y2,
+                    };
 
-                Point P20 = new(P20X, P20Y);
+                    float P20X = (float)(Binomial(2, 0) * Point00.X * Math.Pow(1-t, 2) + Binomial(2, 1) * Point01.X * t * (1-t) + Binomial(2, 2) * Point02.X * t * t);
+                    float P20Y = (float)(Binomial(2, 0) * Point00.Y * Math.Pow(1-t, 2) + Binomial(2, 1) * Point01.Y * t * (1-t) + Binomial(2, 2) * Point02.Y * t * t);
 
-
-                BezierPoints[index - 1, (int)(t *1000)] = P20;
-
-                canvas.Children.Add(newElipse);
-
-                BezierEllipses[index - 1, (int)(t *1000)] = newElipse;
-
-                Canvas.SetTop(newElipse, P20.Y);
-                Canvas.SetLeft(newElipse, P20.X);
-
-
-                
+                    Point P20 = new(P20X, P20Y);
 
 
-                t += 0.001F;
+                    BezierPoints[index - 1, (int)(t *1000)] = P20;
+
+                    canvas.Children.Add(newElipse);
+
+                    BezierEllipses[index - 1, (int)(t *1000)] = newElipse;
+
+                    Canvas.SetTop(newElipse, P20.Y);
+                    Canvas.SetLeft(newElipse, P20.X);
+
+                    t += 0.001F;
+                }
             }
         }
     }

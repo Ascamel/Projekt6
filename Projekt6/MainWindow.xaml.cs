@@ -205,76 +205,38 @@ namespace Projekt6
 
         private void canvas_LeftUp(object sender, MouseButtonEventArgs e)
         {
-            if (element != null )
+            if (element != null && element is Ellipse)
             {
-                if (element is Ellipse)
+
+                var tmp = element as Ellipse;
+                Point MoveAnchorPoint = e.MouseDevice.GetPosition(canvas);
+
+                int startingLineIndex = helpingLines.FindIndex(l => l.X1 == Canvas.GetLeft(tmp) + 2);
+
+                if (startingLineIndex >= 0)
                 {
-                    var tmp = element as Ellipse;
-                    Point MoveAnchorPoint = e.MouseDevice.GetPosition(canvas);
+                    Line startingLine = helpingLines[startingLineIndex];
 
-                    int startingLineIndex = helpingLines.FindIndex(l => l.X1 == Canvas.GetLeft(tmp) + 2);
-
-                    if (startingLineIndex >= 0)
+                    if (startingLineIndex - 1 >= 0)
                     {
-                        Line startingLine = helpingLines[startingLineIndex];
+                        int beforeIndex = startingLineIndex - 1;
 
-                        if (startingLineIndex - 1 >= 0)
+                        if (beforeIndex >= 0)
                         {
-                            int beforeIndex = startingLineIndex - 1;
+                            Canvas.SetTop(tmp, MoveAnchorPoint.Y);
+                            Canvas.SetLeft(tmp, MoveAnchorPoint.X);
 
-                            if (beforeIndex >= 0)
+                            if (startingLineIndex % 2 != 0)
                             {
-                                Canvas.SetTop(tmp, MoveAnchorPoint.Y);
-                                Canvas.SetLeft(tmp, MoveAnchorPoint.X);
+                                helpingLines[startingLineIndex].X1 = Canvas.GetLeft(tmp) + 2;
+                                helpingLines[startingLineIndex].Y1 = Canvas.GetTop(tmp) + 2;
 
-                                if (startingLineIndex % 2 != 0)
-                                {
-                                    helpingLines[startingLineIndex].X1 = Canvas.GetLeft(tmp) + 2;
-                                    helpingLines[startingLineIndex].Y1 = Canvas.GetTop(tmp) + 2;
+                                helpingLines[beforeIndex].X2 = Canvas.GetLeft(tmp) + 2;
+                                helpingLines[beforeIndex].Y2 = Canvas.GetTop(tmp) + 2;
 
-                                    helpingLines[beforeIndex].X2 = Canvas.GetLeft(tmp) + 2;
-                                    helpingLines[beforeIndex].Y2 = Canvas.GetTop(tmp) + 2;
-
-                                    ReDrawBezier(startingLineIndex);
-                                }
-                                else
-                                {
-                                    int endLineIndex = helpingLines.FindIndex(l => l.X1 == startingLine.X2);
-
-                                    if (endLineIndex > 0)
-                                    {
-                                        Line endLine = helpingLines[endLineIndex];
-
-                                        Canvas.SetTop(tmp, MoveAnchorPoint.Y);
-                                        Canvas.SetLeft(tmp, MoveAnchorPoint.X);
-
-                                        helpingLines[startingLineIndex].X1 = Canvas.GetLeft(tmp) + 2;
-                                        helpingLines[startingLineIndex].Y1 = Canvas.GetTop(tmp) + 2;
-
-                                        ReDrawBezier(endLineIndex);
-                                    }
-
-                                    int endLineIndex2 = endLineIndex - 2;
-                                    int startingLineIndex2 = startingLineIndex - 2;
-
-                                    if (endLineIndex2 > 0)
-                                    {
-                                        Line endLine = helpingLines[endLineIndex2];
-
-                                        Canvas.SetTop(tmp, MoveAnchorPoint.Y);
-                                        Canvas.SetLeft(tmp, MoveAnchorPoint.X);
-
-                                        helpingLines[endLineIndex2].X2 = Canvas.GetLeft(tmp) + 2;
-                                        helpingLines[endLineIndex2].Y2 = Canvas.GetTop(tmp) + 2;
-
-                                        ReDrawBezier(endLineIndex2);
-                                    }
-                                }
+                                ReDrawBezier(startingLineIndex);
                             }
-                        }
-                        else
-                        {
-                            if (helpingLines[startingLineIndex + 1] != null)
+                            else
                             {
                                 int endLineIndex = helpingLines.FindIndex(l => l.X1 == startingLine.X2);
 
@@ -290,27 +252,64 @@ namespace Projekt6
 
                                     ReDrawBezier(endLineIndex);
                                 }
+
+                                int endLineIndex2 = endLineIndex - 2;
+                                int startingLineIndex2 = startingLineIndex - 2;
+
+                                if (endLineIndex2 > 0)
+                                {
+                                    Line endLine = helpingLines[endLineIndex2];
+
+                                    Canvas.SetTop(tmp, MoveAnchorPoint.Y);
+                                    Canvas.SetLeft(tmp, MoveAnchorPoint.X);
+
+                                    helpingLines[endLineIndex2].X2 = Canvas.GetLeft(tmp) + 2;
+                                    helpingLines[endLineIndex2].Y2 = Canvas.GetTop(tmp) + 2;
+
+                                    ReDrawBezier(endLineIndex2);
+                                }
                             }
                         }
                     }
                     else
                     {
-                        int endLineIndex = helpingLines.FindIndex(l => l.X2 == Canvas.GetLeft(tmp) + 2);
-
-                        if (endLineIndex > 0)
+                        if (helpingLines[startingLineIndex + 1] != null)
                         {
-                            Line endLine = helpingLines[endLineIndex];
-                            startingLineIndex = helpingLines.FindIndex(l => l.X2 == endLine.X2);
+                            int endLineIndex = helpingLines.FindIndex(l => l.X1 == startingLine.X2);
 
-                            Canvas.SetTop(tmp, MoveAnchorPoint.Y);
-                            Canvas.SetLeft(tmp, MoveAnchorPoint.X);
+                            if (endLineIndex > 0)
+                            {
+                                Line endLine = helpingLines[endLineIndex];
 
-                            helpingLines[endLineIndex].X2 = Canvas.GetLeft(tmp) + 2;
-                            helpingLines[endLineIndex].Y2 = Canvas.GetTop(tmp) + 2;
+                                Canvas.SetTop(tmp, MoveAnchorPoint.Y);
+                                Canvas.SetLeft(tmp, MoveAnchorPoint.X);
 
-                            ReDrawBezier(endLineIndex);
+                                helpingLines[startingLineIndex].X1 = Canvas.GetLeft(tmp) + 2;
+                                helpingLines[startingLineIndex].Y1 = Canvas.GetTop(tmp) + 2;
+
+                                ReDrawBezier(endLineIndex);
+                            }
                         }
                     }
+                }
+                else
+                {
+                    int endLineIndex = helpingLines.FindIndex(l => l.X2 == Canvas.GetLeft(tmp) + 2);
+
+                    if (endLineIndex > 0)
+                    {
+                        Line endLine = helpingLines[endLineIndex];
+                        startingLineIndex = helpingLines.FindIndex(l => l.X2 == endLine.X2);
+
+                        Canvas.SetTop(tmp, MoveAnchorPoint.Y);
+                        Canvas.SetLeft(tmp, MoveAnchorPoint.X);
+
+                        helpingLines[endLineIndex].X2 = Canvas.GetLeft(tmp) + 2;
+                        helpingLines[endLineIndex].Y2 = Canvas.GetTop(tmp) + 2;
+
+                        ReDrawBezier(endLineIndex);
+                    }
+
                 }
             }
         }
